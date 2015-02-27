@@ -1,0 +1,2 @@
+import FrasierBox.Ets
+def_ets_manager(FrasierBox.VideoBlacklistSupervisor, FrasierBox.VideoBlacklistEtsManager, FrasierBox.VideoBlacklist)

@@ -14,6 +14,8 @@ defmodule Exfbox.Mixfile do
   end
 
   defp deps do
-    []
+    [
+      {:timex, "~> 0.13.3"}
+    ]
   end
 end

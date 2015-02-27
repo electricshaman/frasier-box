@@ -12,17 +12,26 @@ defmodule FrasierBox.VideoPlayer do
 
   # Client
 
-  def play_video(video_name) do
-    GenServer.call(__MODULE__, {:play, video_name})
+  def get_queue do
+    GenServer.call(__MODULE__, :get_queue)
+  end
+
+  def get_currently_playing do
+    GenServer.call(__MODULE__, :get_playing)
+  end
+
+  def reset do
+    GenServer.call(__MODULE__, :reset)
   end
 
   def play_videos(video_names) when is_list(video_names) do
+    :ok = reset
     play_videos(video_names, [])
   end
 
   defp play_videos([h|t], acc) do
     result = GenServer.call(__MODULE__, {:play, h})
-    play_videos(t, [{h, result}|acc])
+    play_videos(t, [result|acc])
   end
 
   defp play_videos([], acc) do
@@ -31,11 +40,27 @@ defmodule FrasierBox.VideoPlayer do
 
   # Server
 
+  def handle_call(:get_queue, _from, state) do
+    {:reply, {:ok, state.video_queue}, state}
+  end
+
+  def handle_call(:get_playing, _from, state) do
+    {:reply, {:ok, state.playing}, state}
+  end
+
   def handle_call({:play, video_name}, _from, state) do
     video_path = Path.join(state.video_path, video_name)
     new_queue = add_video_to_queue(self, video_path, state.video_queue)
     new_state = try_play_video(new_queue, state)
     {:reply, :ok, new_state}
+  end
+
+  def handle_call(:reset, _from, state) do
+    if is_pid(state.playing) and Process.alive?(state.playing) do
+      #Process.exit(state.playing, :kill)
+    end
+    System.cmd("killall", ["omxplayer.bin"])
+    {:reply, :ok, %{state | video_queue: []}}
   end
 
   def handle_call(msg, state) do

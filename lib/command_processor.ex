@@ -1,14 +1,16 @@
 defmodule FrasierBox.CommandProcessor do
   use GenServer
   alias FrasierBox.VideoPlayer
+  alias FrasierBox.VideoQueueBuilder
+  alias FrasierBox.VideoBlacklist
   require Logger
 
-  def start_link do
-    GenServer.start_link(__MODULE__, [], [name: __MODULE__])
+  def start_link(video_count) do
+    GenServer.start_link(__MODULE__, [video_count], [name: __MODULE__])
   end
 
-  def init([]) do
-    {:ok, %{started: :os.timestamp, cmd_count: 0}}
+  def init([video_count]) do
+    {:ok, %{started: :os.timestamp, cmd_count: 0, video_count: video_count}}
   end
 
   def process_command(command) when is_binary(command) do
@@ -18,22 +20,37 @@ defmodule FrasierBox.CommandProcessor do
   def handle_cast(command, state) do
     cmd_count = state.cmd_count + 1
     Logger.debug("Command #{cmd_count} received: #{inspect command}")
-    :ok = dispatch(command)
+    case dispatch(command, state) do
+      {:error, _} ->
+        Logger.warn("Failed to dispatch command: #{inspect command}")
+      _ ->
+        :ok
+    end
     {:noreply, %{state | cmd_count: cmd_count}}
   end
 
-  def dispatch(<<0>>) do
-    Logger.debug("Start command received")
-    result = VideoPlayer.play_videos(["test0001.avi", "test0002.avi", "test0003.avi"])
-    Logger.debug(inspect result)
-    #case VideoPlayer.play_video("test0001.avi") do
-    #  :ok -> Logger.debug("Video started")
-    #  _ -> Logger.debug("Video failed to start")
-    #end
-    :ok
+  @doc """
+  Start command
+  """
+  def dispatch(<<0>>, state) do
+    {:ok, queue} = VideoQueueBuilder.build_queue(state.video_count)
+    response = List.duplicate(:ok, state.video_count)
+    :ok = VideoBlacklist.add_videos(queue)
+    result = VideoPlayer.play_videos(queue)
+    case result do
+      ^response -> :ok
+      _ -> {:error, :dispatch_start}
+    end
   end
 
-  def dispatch(other) do
+  @doc """
+  Stop command
+  """
+  def dispatch(<<1>>, state) do
+    VideoPlayer.reset
+  end
+
+  def dispatch(other, state) do
     Logger.warn("Unrecognized command: #{inspect other}")
     :ok
   end
