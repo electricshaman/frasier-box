@@ -1,1 +1,3 @@
-%{"timex": {:hex, :timex, "0.13.3"}}
+%{"conform": {:hex, :conform, "0.13.0"},
+  "exrm": {:hex, :exrm, "0.15.3"},
+  "timex": {:hex, :timex, "0.13.3"}}
