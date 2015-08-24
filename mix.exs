@@ -3,13 +3,13 @@ defmodule Exfbox.Mixfile do
 
   def project do
     [app: :frabox,
-     version: "0.0.1",
+     version: "0.0.2",
      elixir: "~> 1.0",
      deps: deps]
   end
 
   def application do
-    [applications: [:logger],
+    [applications: [:logger, :timex],
     mod: {FrasierBox, []}]
   end
 
