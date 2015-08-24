@@ -1,7 +1,7 @@
 Frasier Box
 ======
-Elixir application for Raspberry Pi that plays X number of random videos in a queue after receiving start command via UDP.
-The queue will exclude any videos which have been played in the previous X number of days.
+Elixir application for Raspberry Pi that plays X (:video_count) number of random videos in a queue after receiving start command via UDP.
+The queue will exclude any videos which have been played in the previous Y (:blacklist_num_days) number of days.
 Playback can be stopped via UDP command.
 The videos are played using omxplayer.
 
